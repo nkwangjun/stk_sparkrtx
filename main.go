@@ -20,7 +20,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"os/signal"
 	"path"
 	"regexp"
 	"strconv"
@@ -28,27 +27,14 @@ import (
 	"supertuxkart/api"
 	"supertuxkart/gsemanager"
 	"supertuxkart/logger"
-	"syscall"
 	"time"
 
-	sdk "agones.dev/agones/sdks/go"
 	"github.com/hpcloud/tail"
 	"math/rand"
 )
 
 // logLocation is the path to the location of the SuperTuxKart log file
 const logLocation = "/.config/supertuxkart/config-0.10/server_config.log"
-
-func signalHandler() {
-	sigChan := make(chan os.Signal)
-	signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGINT)
-	localPid := os.Getpid()
-	sig := <-sigChan
-
-	log.Println("caught sig, exit", localPid, sig)
-	time.Sleep(3 * time.Second)
-	os.Exit(0)
-}
 
 func startGrpcServer() int {
 	// 启动grpc server，监听agent回调
@@ -58,15 +44,6 @@ func startGrpcServer() int {
 
 	// 返回 grpc port
 	return grpcPort
-}
-
-func startHttpServer() int {
-	// 启动 http 服务，方便调试
-	httpProcess := api.NewHttpProcess()
-	httpProcess.StartHttpServer()
-	clientPort := httpProcess.GetHttpPort()
-
-	return clientPort
 }
 
 // main intercepts the log file of the SuperTuxKart gameserver and uses it
@@ -107,11 +84,10 @@ func main() {
 	gseManager := gsemanager.GetGseManager()
 	err := gseManager.ProcessReady([]string{"/local/game/log/log.txt"}, int32(clientPort), int32(grpcPort))
 	if err != nil {
-		logger.Fatal("processready fail")
+		logger.Fatal("ProcessReady fail")
 	}
 
-	log.Println("Starting health checking")
-	//go doHealth(s)
+	log.Println("Gse connected")
 
 	// SuperTuxKart refuses to output to foreground, so we're going to
 	// poll the server log.
@@ -119,6 +95,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("could not get home dir: %v", err)
 	}
+
+	log.Printf("SuperTuxKart log file path: %s \n", path.Join(home, logLocation))
 
 	t := &tail.Tail{}
 	// Loop to make sure the log has been created. Sometimes it takes a few seconds
@@ -160,17 +138,6 @@ func main() {
 		}
 	}
 	log.Fatal("tail ended")
-}
-
-// doHealth sends the regular Health Pings
-func doHealth(sdk *sdk.SDK) {
-	tick := time.Tick(2 * time.Second)
-	for {
-		if err := sdk.Health(); err != nil {
-			log.Fatalf("could not send health ping: %v", err)
-		}
-		<-tick
-	}
 }
 
 // handleLogLine compares the log line to a series of regexes to determine if any action should be taken.

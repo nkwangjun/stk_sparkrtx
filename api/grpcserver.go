@@ -67,6 +67,7 @@ func (s *rpcService) OnHealthCheck(ctx context.Context, req *grpcsdk.HealthCheck
 		HealthStatus: s.healthStatus,
 	}
 
+	logger.Info("OnHealthCheck status: " + strconv.FormatBool(s.healthStatus))
 	return resp, nil
 }
 
