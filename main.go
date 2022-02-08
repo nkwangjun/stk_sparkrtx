@@ -20,6 +20,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path"
 	"regexp"
 	"strconv"
 	"strings"
@@ -33,7 +34,7 @@ import (
 )
 
 // logLocation is the path to the location of the SuperTuxKart log file
-const logLocation = "/home/supertuxkart/.config/supertuxkart/config-0.10/server_config.log"
+const logLocation = "/.config/supertuxkart/config-0.10/server_config.log"
 
 func startGrpcServer() int {
 	// 启动grpc server，监听agent回调
@@ -90,14 +91,19 @@ func main() {
 
 	// SuperTuxKart refuses to output to foreground, so we're going to
 	// poll the server log.
-	log.Printf("SuperTuxKart log file path: %s \n", logLocation)
+	home, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatalf("could not get home dir: %v", err)
+	}
+
+	log.Printf("SuperTuxKart log file path: %s \n", path.Join(home, logLocation))
 
 	t := &tail.Tail{}
 	// Loop to make sure the log has been created. Sometimes it takes a few seconds
 	for i := 0; i < 10; i++ {
 		time.Sleep(time.Second)
 
-		t, err = tail.TailFile(logLocation, tail.Config{Follow: true})
+		t, err = tail.TailFile(path.Join(home, logLocation), tail.Config{Follow: true})
 		if err != nil {
 			log.Print(err)
 			continue
