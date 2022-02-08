@@ -82,6 +82,8 @@ func (s *rpcService) OnStartGameServerSession(ctx context.Context, req *grpcsdk.
 }
 
 func (s *rpcService) OnProcessTerminate(ctx context.Context, req *grpcsdk.ProcessTerminateRequest) (*grpcsdk.ProcessResponse, error) {
+	logger.Info("OnProcessTerminate called, req:" + req.String())
+
 	gseManager := gsemanager.GetGseManager()
 	gseManager.SetTerminationTime(req.TerminationTime)
 	//结束游戏会话

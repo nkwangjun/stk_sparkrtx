@@ -121,6 +121,7 @@ func main() {
 		case "READY":
 			log.Print("log to mark server ready")
 		case "PLAYERJOIN":
+			log.Printf("Player Join: %s \n", player)
 			if player == nil {
 				log.Print("could not determine player")
 				break
@@ -129,12 +130,14 @@ func main() {
 				log.Print("enablePlayerTracking")
 			}
 		case "PLAYERLEAVE":
+			log.Printf("Player Join: %s \n", player)
 			if player == nil {
 				log.Print("could not determine player")
 				break
 			}
 		case "SHUTDOWN":
-			os.Exit(0)
+			log.Print("No more players, maybe shutdown")
+			// os.Exit(0)
 		}
 	}
 	log.Fatal("tail ended")
