@@ -53,7 +53,7 @@ func main() {
 	grpcPort := startGrpcServer()
 
 	// 随机端口
-	rand.Seed(2)
+	rand.Seed(time.Now().Unix())
 	clientPort := 20000 + rand.Intn(10000)
 
 	log.SetPrefix("[wrapper] ")
