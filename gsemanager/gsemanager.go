@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+	"os"
 	"strconv"
 	"supertuxkart/grpcsdk"
 	"supertuxkart/logger"
@@ -30,10 +31,29 @@ type gsemanager struct {
 	rpcClient         grpcsdk.GseGrpcSdkServiceClient
 }
 
-func GetGseManager(pid int) *gsemanager {
+func GetGseManagerByPid(pid int) *gsemanager {
 	once.Do(func() {
 		gseManagerIns = &gsemanager{
 			pid: strconv.Itoa(pid),
+		}
+
+		url := fmt.Sprintf("%s:%d", localhost, agentPort)
+
+		conn, err := grpc.DialContext(context.Background(), url, grpc.WithInsecure())
+		if err != nil {
+			logger.Fatal("dail to gse fail", zap.String("url", url), zap.Error(err))
+		}
+
+		gseManagerIns.rpcClient = grpcsdk.NewGseGrpcSdkServiceClient(conn)
+	})
+
+	return gseManagerIns
+}
+
+func GetGseManager() *gsemanager {
+	once.Do(func() {
+		gseManagerIns = &gsemanager{
+			pid: strconv.Itoa(os.Getpid()),
 		}
 
 		url := fmt.Sprintf("%s:%d", localhost, agentPort)
