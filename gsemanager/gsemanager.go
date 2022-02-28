@@ -7,7 +7,6 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
-	"os"
 	"strconv"
 	"supertuxkart/grpcsdk"
 	"supertuxkart/logger"
@@ -31,10 +30,10 @@ type gsemanager struct {
 	rpcClient         grpcsdk.GseGrpcSdkServiceClient
 }
 
-func GetGseManager() *gsemanager {
+func GetGseManager(pid int) *gsemanager {
 	once.Do(func() {
 		gseManagerIns = &gsemanager{
-			pid: strconv.Itoa(os.Getpid()),
+			pid: strconv.Itoa(pid),
 		}
 
 		url := fmt.Sprintf("%s:%d", localhost, agentPort)
@@ -68,10 +67,12 @@ func (g *gsemanager) getContext() context.Context {
 func (g *gsemanager) ProcessReady(logPath []string, clientPort int32, grpcPort int32) error {
 	logger.Info("start to processready", zap.Any("logPath", logPath), zap.Int32("clientPort", clientPort),
 		zap.Int32("grpcPort", grpcPort))
+	pid, _ := strconv.ParseInt(g.pid, 10, 32)
 	req := &grpcsdk.ProcessReadyRequest{
 		LogPathsToUpload: logPath,
 		ClientPort:       clientPort,
 		GrpcPort:         grpcPort,
+		Pid:              int32(pid),
 	}
 
 	_, err := g.rpcClient.ProcessReady(g.getContext(), req)
@@ -138,7 +139,10 @@ func (g *gsemanager) TerminateGameServerSession() (*grpcsdk.AuxProxyResponse, er
 // 6. ProcessEnding
 func (g *gsemanager) ProcessEnding() (*grpcsdk.AuxProxyResponse, error) {
 	logger.Info("start to ProcessEnding")
-	req := &grpcsdk.ProcessEndingRequest{}
+	pid, _ := strconv.ParseInt(g.pid, 10, 32)
+	req := &grpcsdk.ProcessEndingRequest{
+		Pid: int32(pid),
+	}
 
 	return g.rpcClient.ProcessEnding(g.getContext(), req)
 }

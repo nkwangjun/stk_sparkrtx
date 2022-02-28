@@ -80,8 +80,8 @@ func main() {
 		log.Fatalf("error starting cmd: %v", err)
 	}
 
-	log.Println("Connecting to Gse with the SDK")
-	gseManager := gsemanager.GetGseManager()
+	log.Printf("Connecting to Gse with the SDK, pid: %d \n", cmd.Process.Pid)
+	gseManager := gsemanager.GetGseManager(cmd.Process.Pid)
 	err := gseManager.ProcessReady([]string{"/local/game/log/log.txt"}, int32(clientPort), int32(grpcPort))
 	if err != nil {
 		logger.Fatal("ProcessReady fail")
