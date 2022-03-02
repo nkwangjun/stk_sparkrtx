@@ -21,7 +21,7 @@ var (
 
 const (
 	localhost = "127.0.0.1"
-	agentPort = 10003
+	agentPort = 10001
 )
 
 type gsemanager struct {
